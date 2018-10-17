@@ -322,6 +322,17 @@ class BasketProviderComponent extends React.Component {
     return false;
   };
 
+  itemExistInBasket = ({ item }) => {
+    const { items } = this.state;
+    const index = this.findItemIndex(item);
+    const itemInBasket = items[index];
+
+    if (itemInBasket) {
+      return true;
+    }
+    return false;
+  };
+
   incrementQuantityItem = item =>
     this.onReady(() => {
       this.changeItemQuantity({ item, num: 1 });
@@ -332,18 +343,22 @@ class BasketProviderComponent extends React.Component {
       this.changeItemQuantity({ item, num: -1 });
     });
 
-  addItem = itemRaw =>
+  addItem = (itemRaw, virtual = false) =>
     this.onReady(() => {
       const item = this.parseBasketItem(itemRaw);
 
       // Try to increment by one. If not, add new product to basket
+      const itemExist = this.itemExistInBasket({ item });
+
+      if (virtual && itemExist) {
+        return;
+      }
+
       if (!this.changeItemQuantity({ item, num: 1 })) {
         this.setState(s => ({
           items: [...s.items, item]
         }));
-
         this.validateBasketDelayed();
-
         if (this.state.options.onAddToBasket) {
           this.state.options.onAddToBasket([{ ...item, quantity: 1 }]);
         }
